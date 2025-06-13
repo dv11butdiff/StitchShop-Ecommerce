@@ -19,6 +19,7 @@
     "react-spinners": "^0.13.8",
     "react-toastify": "^9.1.2",
     "slick-carousel": "^1.8.1",
+    "use-postal-ph": "^1.1.13",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

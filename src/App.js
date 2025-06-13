@@ -10,6 +10,7 @@ const Home =lazy(()=> import("./pages/Home"))
 const Shop =lazy(()=> import("./pages/Shop"))
 const Cart =lazy(()=> import("./pages/Cart"))
 const ProductDetails =lazy(()=> import("./pages/ProductDetails"));
+const Postal =lazy(()=> import("./pages/Postal"));
 export const DataContainer = createContext();
 function App() {
   const [CartItem, setCartItem] = useState([])
@@ -60,6 +61,7 @@ function App() {
           <NavBar/>
           <Routes>
             <Route path='/' element={<Home/>}/>
+            <Route path='/postal' element={<Postal/>}/>
             <Route path='/shop' element={<Shop/>}/>
             <Route path='/shop/:id' element={<ProductDetails/>}/>
             <Route path='/cart' element={<Cart/>}/>
