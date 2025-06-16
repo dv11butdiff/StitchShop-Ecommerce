@@ -5,7 +5,6 @@ import { Col, Container, Row } from "react-bootstrap"
 const Cart = () => {
   const { CartItem, setCartItem, addToCart, decreaseQty, deleteProduct } = useContext(DataContainer)
 
-  // Format currency to PHP
   const formatToPHP = (amount) =>
     new Intl.NumberFormat('en-PH', {
       style: 'currency',

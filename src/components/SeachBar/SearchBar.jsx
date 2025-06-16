@@ -1,23 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./searchbar.css";
-import { products } from "../../utils/products";
-const SearchBar = ({setFilterList}) => {
-    const [inputValue,setInputValue] =useState(null);
-    const handelChange =(input)=> {
-        setInputValue(input.target.value);
-        setFilterList(products.filter(item => item.productName?.toLowerCase().includes(inputValue?.toLowerCase())));
-    }
-    return (
+
+const SearchBar = ({ setSearchTerm }) => {
+  const handleChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  return (
     <div className="search-container">
-        <input
+      <input
         type="text"
         placeholder="Search..."
-        // value={value}
-        onChange={handelChange}
-        />
-        <ion-icon name="search-outline" className="search-icon"></ion-icon>
+        onChange={handleChange}
+      />
+      <ion-icon name="search-outline" className="search-icon"></ion-icon>
     </div>
-    );
+  );
 };
 
 export default SearchBar;

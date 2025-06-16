@@ -1,13 +1,7 @@
 import Select from 'react-select';
-import { products } from '../utils/products';
-
-const options = [
-    { value: "sofa", label: "Sofa" },
-    { value: "chair", label: "Chair" },
-    { value: "watch", label: "Watch" },
-    { value: "mobile", label: "Mobile" },
-    { value: "wireless", label: "Wireless" },
-];
+import useData from '../utils/dataUtil';
+import { useEffect, useState } from "react";
+import { toast } from 'react-toastify';
 
 const customStyles = {
     control: (provided) => ({
@@ -35,17 +29,42 @@ const customStyles = {
     }),
 };
 
-const FilterSelect = ({setFilterList}) => {
+const FilterSelect = ({ setSelectedCategory }) => {
+    const [categories, setCategories] = useState([]);
+    
+    const { data, loading, error, getData } = useData("categories/");
+    
+    useEffect(() => {
+        getData();
+    }, []);
+    
+    useEffect(() => {
+        if (data) {
+          setCategories(data);
+        }
+    }, [data]);
+    
+    useEffect(() => {
+        if (error) {
+          toast.error("Failed to load categories. Please try again.");
+        }
+    }, [error]);
+
     const handleChange = (selectedOption)=> {
-        setFilterList(products.filter(item => item.category ===selectedOption.value))
+        setSelectedCategory(selectedOption.value);
     }
+
+    const defaultValue = { value: "", label: "Filter By Category" };
+    const options = categories.map(category=>({value: category.name, label: category.name}));
+    options.push(defaultValue);
+    
     return (
-    <Select
-    options={options}
-    defaultValue={{ value: "", label: "Filter By Category" }}
-    styles={customStyles}
-    onChange={handleChange}
-    />
+        <Select
+            options={options}
+            defaultValue={defaultValue}
+            styles={customStyles}
+            onChange={handleChange}
+        />
     );
 };
 

@@ -2,98 +2,106 @@ import { Navigate } from "react-router-dom";
 import axios from "axios";
 import { useState, useEffect } from "react";
 
-export default function ProtectedRoute({ children }) { // Removed 'group' prop
+export default function ProtectedRoute({ children }) {
   const [isAuthorized, setIsAuthorized] = useState(null);
-  const BASE_URL = "http://localhost:8000/api"; // Local Django backend URL
+  const BASE_URL = "http://localhost:8000/api";
 
-  const auth = async () => {
+  const authAxios = axios.create({
+    baseURL: BASE_URL,
+  });
+
+  const authCheck = async () => {
+    console.log("ProtectedRoute: Initiating authentication check...");
     try {
-      const accessToken = localStorage.getItem('accessToken'); // Assuming you store accessToken in localStorage
+      const accessToken = localStorage.getItem('accessToken');
 
       if (!accessToken) {
+        console.warn("ProtectedRoute: No access token found in localStorage. Setting unauthorized.");
         setIsAuthorized(false);
         return;
       }
 
-      // Send a request to a protected endpoint to validate the access token
-      // This endpoint should ideally be a lightweight check, like a /verify-token/ or a user info endpoint.
-      // For this example, we'll hit a generic protected endpoint (you might need to adjust this on your backend).
-      const res = await axios.get(`${BASE_URL}/protected-route/`, { // Changed to GET as it's a validation
+      const res = await authAxios.get(`${BASE_URL}/protected/`, {
         headers: {
-          Authorization: `Bearer ${accessToken}`, // Send access token as Bearer
+          Authorization: `Bearer ${accessToken}`,
         },
-        withCredentials: true, // If your backend also relies on session cookies
       });
 
-      if (res.status === 200) { // Assuming a 200 OK means authorized
+      if (res.status === 200) {
+        console.log("ProtectedRoute: Auth check successful. User is authorized.");
         setIsAuthorized(true);
       } else {
+        console.warn("ProtectedRoute: Auth check failed with non-200 status:", res.status, res.data);
         setIsAuthorized(false);
       }
     } catch (error) {
-      console.log(
-        "Authorization Error:",
-        error.response?.data?.detail || error.message
+      console.error(
+        "ProtectedRoute: Authentication Check Error:",
+        error.response?.status,
+        error.response?.data?.detail || error.message || "Network Error"
       );
 
-      // If the error is 401 Unauthorized, it might mean the access token is expired
       if (error.response && error.response.status === 401) {
-        refresh(); // Try refreshing the token
+        console.log("ProtectedRoute: Access token expired. Attempting to refresh...");
+        refreshAuthTokens(() => authCheck());
       } else {
         setIsAuthorized(false);
       }
     }
   };
 
-  const refresh = async () => {
+  const refreshAuthTokens = async (callback) => {
+    console.log("ProtectedRoute: Attempting to refresh tokens...");
     try {
-      // Send a request to the refresh token endpoint.
-      // The refresh token is typically sent via an HTTP-only cookie,
-      // so `withCredentials: true` is important.
-      const res = await axios.post(
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        console.warn("ProtectedRoute: No refresh token available to refresh. Setting unauthorized.");
+        setIsAuthorized(false);
+        return;
+      }
+
+      const res = await authAxios.post(
         `${BASE_URL}/auth/token/refresh/`,
-        {}, // No explicit body data needed if refresh token is in cookie
-        { withCredentials: true }
+        { refresh: refreshToken }
       );
 
       if (res.data && res.data.access) {
-        // If refresh is successful, update the new access token in localStorage
         localStorage.setItem('accessToken', res.data.access);
-        setIsAuthorized(true);
+        if (res.data.refresh) {
+          localStorage.setItem('refreshToken', res.data.refresh);
+        }
+        console.log("ProtectedRoute: Tokens refreshed successfully.");
+        if (callback) {
+          callback();
+        } else {
+        }
       } else {
+        console.warn("ProtectedRoute: Token refresh failed or no new access token returned. Setting unauthorized.");
         setIsAuthorized(false);
       }
     } catch (error) {
-      console.log(
-        "Refresh Error:",
+      console.error(
+        "ProtectedRoute: Refresh token failed:",
         error.response?.data?.detail || error.message
       );
-      // If refresh fails, clear tokens and set as unauthorized
       localStorage.removeItem('accessToken');
-      // You might also want to clear the refresh token cookie if it's explicitly managed client-side
+      localStorage.removeItem('refreshToken');
       setIsAuthorized(false);
     }
   };
 
   useEffect(() => {
-    auth();
-  }, []); // Run auth once on component mount
+    authCheck();
+  }, []);
 
   if (isAuthorized === null) {
-    // Optionally, you can show a loading spinner or placeholder until the auth check is complete
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen text-lg text-gray-700">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900 mr-3"></div>
+        Checking authentication status...
+      </div>
+    );
   }
 
-  // Redirect to a generic login page if not authorized
-  return isAuthorized ? children : <Navigate to="/login" />;
+  return isAuthorized ? children : <Navigate to="/login" replace />;
 }
-
-// Usage to App.js
-        //   <Routes>
-        //     <Route path='/login' element={<Login/>}/>
-        //     <Route path='/register' element={<Register/>}/>
-        //     <Route path='/' element={<Home/>}/>
-        //     <Route path='/shop' element={<ProtectedRoute><Shop/></ProtectedRoute>}/>
-        //     <Route path='/shop/:id' element={<ProtectedRoute><ProductDetails/></ProtectedRoute>}/>
-        //     <Route path='/cart' element={<ProtectedRoute><Cart/></ProtectedRoute>}/>
-        //   </Routes>
