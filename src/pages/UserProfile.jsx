@@ -1,11 +1,13 @@
-import React, { useState, useEffect, Fragment } from "react";
+import React, { useState, useEffect, Fragment, useContext } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import useData from "../utils/dataUtil";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { DataContainer } from "../App";
 
 const UserProfile = () => {
+  const { UserInfo, setUserInfo } = useContext(DataContainer);
   const [user, setUser] = useState({});
 
   const { data, loading, error, getData } = useData("auth/me/");
@@ -33,6 +35,7 @@ const UserProfile = () => {
         updatedAt: data.updated_at,
         profilePicture: "https://placehold.co/150x150/0f3460/FFFFFF?text=JD",
         bio: "Passionate shopper and tech enthusiast. Always looking for the best deals!",
+        cart: data.cart[0].cart_id,
         address: primaryAddress
           ? {
               addressId: primaryAddress.address_id,
@@ -47,6 +50,8 @@ const UserProfile = () => {
             }
           : null,
       });
+
+      localStorage.setItem("cart", user.cart);
     }
   }, [data]);
 
@@ -151,7 +156,7 @@ const UserProfile = () => {
     } finally {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-
+      localStorage.removeItem("cart");
       navigate("/login");
     }
   };

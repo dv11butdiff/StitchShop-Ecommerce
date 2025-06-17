@@ -21,8 +21,8 @@ export const DataContainer = createContext();
 function App() {
   const [CartItem, setCartItem] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
-
   const [allProducts, setAllProducts] = useState([]);
+  const [UserInfo, setUserInfo] = useState([]);
 
   const {
     data: productsData,
@@ -42,7 +42,7 @@ function App() {
 
   useEffect(() => {
     fetchAllProducts();
-    fetchAllCartItems();
+    if (localStorage.getItem("accessToken")) fetchAllCartItems();
   }, []);
 
   useEffect(() => {
@@ -84,12 +84,28 @@ function App() {
       (item) => item.product_id === product.product_id
     );
 
+    console.log("selected: ", selectedProduct);
+    console.log("Item: ", productExit);
+    console.log("Product: ", product);
+
     if (productExit) {
       // update
       update(productExit, productExit.quantity + 1);
     } else {
       // create
-      const payload = { product: productExit.product_id, quantity: num };
+      try {
+        const payload = {cart: localStorage.getItem("cart"), product: product.product_id, quantity: num };
+        addItemToCart(payload);
+        fetchAllCartItems();
+        toast.info(
+          `${product.product_name} added to the cart.`
+        );
+      } catch (error) {
+        toast.error(
+          `Failed to add ${product.product_name} to cart.`
+        );
+        console.error("Error adding cart item:", error);
+      }
     }
   };
 
@@ -116,6 +132,7 @@ function App() {
     deletion(productToDelete);
   };
   useEffect(() => {
+    console.log(cartData);
     if (!cartLoading && cartData) {
       console.log("cartData received:", cartData); // <--- is this an array?
       setCartItem(cartData);
@@ -132,6 +149,8 @@ function App() {
         selectedProduct,
         setSelectedProduct,
         allProducts,
+        UserInfo,
+        setUserInfo,
       }}
     >
       <Suspense fallback={<Loader />}>

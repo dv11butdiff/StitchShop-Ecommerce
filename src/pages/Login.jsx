@@ -20,6 +20,9 @@ const Login = () => {
       if (data && data.access && data.refresh) {
         localStorage.setItem('accessToken', data.access);
         localStorage.setItem('refreshToken', data.refresh);
+        localStorage.setItem("cart", data.cart);
+
+        console.log(data);
 
         toast.success('Login successful!');
         navigate('/');
