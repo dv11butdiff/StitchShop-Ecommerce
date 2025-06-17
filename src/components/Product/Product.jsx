@@ -13,7 +13,7 @@ const Product = ({title,productItem,addToCart}) => {
     const increment = () => {
         setCount(count + 1)
     }
-    console.log(productItem);
+    
     const handelClick =()=> {
         setSelectedProduct(productItem);
         localStorage.setItem(`selectedProduct-${productItem.product_id}`,JSON.stringify(productItem));

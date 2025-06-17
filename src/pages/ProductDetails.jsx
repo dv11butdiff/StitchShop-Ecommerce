@@ -25,8 +25,6 @@ const ProductDetails = () => {
     }
   }, [id, selectedProduct]);
 
-  console.log("ProductDetails - allProducts from context:", allProducts); // Keep this log for debugging
-
   const formatToPHP = (amount) =>
     new Intl.NumberFormat("en-PH", {
       style: "currency",

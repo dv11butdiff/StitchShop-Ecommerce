@@ -91,7 +91,6 @@ const UserProfile = () => {
   };
 
   const handleSaveChanges = () => {
-    console.log("Saving changes:", editableUser);
 
     setUser(editableUser);
     setIsEditing(false);
