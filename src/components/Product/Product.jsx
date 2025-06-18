@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import productImg01 from "../../Images/phone-01.jpg";
 
 const Product = ({title,productItem,addToCart}) => {
-    const {setSelectedProduct} =useContext(DataContainer);
+    const {setSelectedProduct, UserInfo} =useContext(DataContainer);
     const router =useNavigate();
     const [count, setCount] = useState(0);
     const increment = () => {
@@ -21,7 +21,10 @@ const Product = ({title,productItem,addToCart}) => {
     }
     const handelAdd =(productItem)=> {
         addToCart(productItem);
-        toast.success("Product has been added to cart!");
+        
+        if (UserInfo.cart) {
+            toast.success("Product has been added to cart!");
+        }
     }
     return (
     <Col md={3} sm={5} xs={10} className="product mtop">

@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 const ProductDetails = () => {
   const [listSelected, setListSelected] = useState("desc");
   const [relatedProducts, setRelatedProducts] = useState([]);
-  const { allProducts, addToCart } = useContext(DataContainer);
+  const { allProducts, addToCart, UserInfo } = useContext(DataContainer);
   const { id } = useParams();
   
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -38,7 +38,9 @@ const ProductDetails = () => {
 
   const handelAdd = (product, qty) => {
     addToCart(product, qty);
-    toast.success("Product has been added to cart!");
+    if (UserInfo.cart) {
+      toast.success("Product has been added to cart!");
+    }
   };
 
   useEffect(() => {
