@@ -35,7 +35,7 @@ const UserProfile = () => {
         updatedAt: data.updated_at,
         profilePicture: "https://placehold.co/150x150/0f3460/FFFFFF?text=JD",
         bio: "Passionate shopper and tech enthusiast. Always looking for the best deals!",
-        cart: data.cart[0].cart_id,
+        cart: data.cart.cart_id,
         address: primaryAddress
           ? {
               addressId: primaryAddress.address_id,
