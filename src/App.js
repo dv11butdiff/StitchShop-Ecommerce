@@ -17,6 +17,9 @@ const Postal = lazy(() => import("./pages/Postal"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const UserProfile = lazy(() => import("./pages/UserProfile"));
+
+const Checkout = lazy(() => import("./pages/Checkout"));
+
 export const DataContainer = createContext();
 function App() {
   const [CartItem, setCartItem] = useState([]);
@@ -191,6 +194,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Cart />
+                </ProtectedRoute>
+              }
+            />
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute>
+                    <Checkout />
                 </ProtectedRoute>
               }
             />
