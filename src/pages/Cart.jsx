@@ -2,11 +2,12 @@
 import { useContext, useEffect } from "react";
 import { DataContainer } from "../App";
 import { Col, Container, Row } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
   const { CartItem, setCartItem, addToCart, decreaseQty, deleteProduct } =
     useContext(DataContainer);
-
+  const navigate = useNavigate();
   const formatToPHP = (amount) =>
     new Intl.NumberFormat("en-PH", {
       style: "currency",
@@ -80,11 +81,14 @@ const Cart = () => {
           </Col>
           <Col md={4}>
             <div className="cart-total">
-              <h2>Cart Summary</h2>
-              <div className="d_flex">
+             <h2>Cart Summary</h2>
+              <div className="d_flex mb-3">
                 <h4>Total Price :</h4>
                 <h3>{formatToPHP(totalPrice)}</h3>
               </div>
+                <button className="btn btn-primary w-100" onClick={() => navigate("/checkout")}>
+                  Proceed to Checkout
+                </button>
             </div>
           </Col>
         </Row>
