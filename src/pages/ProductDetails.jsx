@@ -11,7 +11,7 @@ const ProductDetails = () => {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const { allProducts, addToCart, UserInfo } = useContext(DataContainer);
   const { id } = useParams();
-  
+
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
@@ -32,12 +32,38 @@ const ProductDetails = () => {
     }).format(amount);
 
   const [quantity, setQuantity] = useState(1);
+
   const handleQuantityChange = (event) => {
-    setQuantity(Math.max(1, parseInt(event.target.value) || 1));
+    const value = event.target.value;
+    // Get max from selectedProduct, default to 1 if null/undefined/0 to prevent issues
+    const maxAllowedQuantity = selectedProduct?.quantity > 0 ? selectedProduct.quantity : 1;
+
+    if (value === '' || isNaN(value)) {
+      setQuantity('');
+    } else {
+      let newQuantity = parseInt(value, 10);
+      if (newQuantity < 1) {
+        newQuantity = 1;
+      } else if (newQuantity > maxAllowedQuantity) {
+        newQuantity = maxAllowedQuantity;
+        toast.warn(`Maximum quantity for this product is ${maxAllowedQuantity}`);
+      }
+      setQuantity(newQuantity);
+    }
+    console.log("Quantity Change: ", value);
   };
 
   const handelAdd = (product, qty) => {
-    addToCart(product, qty);
+    // Only proceed if product and a valid quantity exist
+    if (!product || product.quantity === null || product.quantity === 0 || typeof product.quantity === 'undefined') {
+      toast.error("This product is currently out of stock.");
+      return; // Stop the function if product is not available
+    }
+
+    const maxAllowedQuantity = product?.quantity || 1;
+    const finalQty = Math.min(maxAllowedQuantity, Math.max(1, parseInt(qty, 10) || 1));
+
+    addToCart(product, finalQty);
     if (UserInfo.cart) {
       toast.success("Product has been added to cart!");
     }
@@ -62,6 +88,11 @@ const ProductDetails = () => {
     return <h1 className="not-found">Product details are loading or not found.</h1>;
   }
 
+  // Determine if the add to cart button should be disabled
+  const isAddToCartDisabled = selectedProduct?.stock_quantity === null ||
+                             selectedProduct?.stock_quantity === 0 ||
+                             typeof selectedProduct?.stock_quantity === 'undefined';                         
+
   return (
     <Fragment>
       <Banner title={selectedProduct?.name} />
@@ -83,7 +114,7 @@ const ProductDetails = () => {
                     <i
                       key={i}
                       className={`fa fa-star ${
-                        selectedProduct?.reviews && selectedProduct.reviews.length > 0 && 
+                        selectedProduct?.reviews && selectedProduct.reviews.length > 0 &&
                         i < Math.floor(selectedProduct.reviews.reduce((acc, curr) => acc + curr.rating, 0) / selectedProduct.reviews.length)
                           ? 'checked'
                           : ''
@@ -108,15 +139,21 @@ const ProductDetails = () => {
                 value={quantity}
                 onChange={handleQuantityChange}
                 min="1"
+                max={selectedProduct?.quantity || 1000}
+                disabled={isAddToCartDisabled}
               />
               <button
                 aria-label="Add"
                 type="submit"
                 className="add"
                 onClick={() => handelAdd(selectedProduct, quantity)}
+                disabled={isAddToCartDisabled}
               >
                 Add To Cart
               </button>
+              {isAddToCartDisabled && (
+                <p style={{ color: 'red', marginTop: '10px' }}>This product is currently out of stock.</p>
+              )}
             </Col>
           </Row>
         </Container>

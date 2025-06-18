@@ -42,8 +42,11 @@ function App() {
 
   useEffect(() => {
     fetchAllProducts();
-    if (localStorage.getItem("accessToken")) fetchAllCartItems();
   }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem("accessToken")) fetchAllCartItems();
+  }, [CartItem]);
 
   useEffect(() => {
     if (productsData) {
@@ -80,20 +83,18 @@ function App() {
   };
 
   const addToCart = (product, num = 1) => {
-    let productExit = [];
-    if (UserInfo.cart) {
-      productExit = CartItem.find(
-        (item) => item.product_id === product.product_id
-      );
-    }
+    console.log("Quantity: ", num);
+    const productExit = CartItem.find(
+      (item) => item.product_id === product.product_id
+    );
 
     console.log("selected: ", selectedProduct);
     console.log("Item: ", productExit);
     console.log("Product: ", product);
 
-    if (productExit && UserInfo.cart) {
+    if (productExit) {
       // update
-      update(productExit, productExit.quantity + 1);
+      update(productExit, productExit.quantity + num);
     } else {
       // create
       try {
