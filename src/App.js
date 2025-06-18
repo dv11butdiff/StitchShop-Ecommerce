@@ -9,6 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import useData from "./utils/dataUtil";
 import { toast } from "react-toastify";
+
 const Home = lazy(() => import("./pages/Home"));
 const Shop = lazy(() => import("./pages/Shop"));
 const Cart = lazy(() => import("./pages/Cart"));
@@ -17,15 +18,17 @@ const Postal = lazy(() => import("./pages/Postal"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const UserProfile = lazy(() => import("./pages/UserProfile"));
-
 const Checkout = lazy(() => import("./pages/Checkout"));
 
 export const DataContainer = createContext();
+
 function App() {
   const [CartItem, setCartItem] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [allProducts, setAllProducts] = useState([]);
   const [UserInfo, setUserInfo] = useState([]);
+  // New state to explicitly trigger cart data refresh
+  const [cartNeedsRefresh, setCartNeedsRefresh] = useState(false);
 
   const {
     data: productsData,
@@ -42,25 +45,92 @@ function App() {
     deleteData: removeItemToCart,
     updateData: updateItemToCart,
   } = useData("cartitems/");
+  const {
+    data: userData,
+    loading: userLoading,
+    error: userError,
+    getData: fetchUserData,
+  } = useData("auth/me/");
 
+  // Fetch all products once on component mount
   useEffect(() => {
     fetchAllProducts();
   }, []);
 
+  // Fetch user data once on component mount if access token exists
   useEffect(() => {
-    if (localStorage.getItem("accessToken")) fetchAllCartItems();
-  }, [CartItem]);
+    if (localStorage.getItem("accessToken")) {
+      fetchUserData();
+    }
+  }, []);
 
+  // Fetch cart items when the component mounts or when cartNeedsRefresh is true
+  // This replaces the problematic `[CartItem]` dependency
+  useEffect(() => {
+    if (localStorage.getItem("accessToken")) {
+      fetchAllCartItems();
+    }
+    // Reset the flag after fetching to prevent infinite loop
+    setCartNeedsRefresh(false);
+  }, [cartNeedsRefresh]); // Only re-run when cart needs a refresh
+
+  // Update allProducts state when productsData changes
   useEffect(() => {
     if (productsData) {
       setAllProducts(productsData);
     }
   }, [productsData]);
 
+  // Update UserInfo state when userData changes
+  useEffect(() => {
+    console.log(userData);
+      if (userData) {
+        const primaryAddress =
+          userData.address && userData.address.length > 0 ? userData.address[0] : null;
+  
+        setUserInfo({
+          id: userData.id,
+          username: userData.username,
+          email: userData.email,
+          firstName: userData.first_name,
+          middleName: userData.middle_name,
+          lastName: userData.last_name,
+          phoneNumber: userData.phone,
+          role: userData.role,
+          createdAt: userData.created_at,
+          updatedAt: userData.updated_at,
+          profilePicture: "https://placehold.co/150x150/0f3460/FFFFFF?text=JD",
+          bio: "Passionate shopper and tech enthusiast. Always looking for the best deals!",
+          cart: userData.cart?.cart_id, // Use optional chaining for cart
+          address: primaryAddress
+            ? {
+                addressId: primaryAddress.address_id,
+                streetName: primaryAddress.street_name,
+                buildingHouseNo: primaryAddress.building_house_no,
+                barangay: primaryAddress.barangay,
+                cityMunicipality: primaryAddress.city_municipality,
+                province: primaryAddress.province,
+                postalCode: primaryAddress.postal_code,
+                country: primaryAddress.country,
+                addressType: primaryAddress.address_type,
+              }
+            : null,
+        });
+      }
+    }, [userData]);
+
+  // Update CartItem state when cartData changes and is not loading
+  useEffect(() => {
+    if (!cartLoading && cartData) {
+      setCartItem(cartData);
+    }
+  }, [cartData, cartLoading]); // Added cartLoading to ensure data is stable
+
   const deletion = async (product) => {
     try {
       await removeItemToCart(product.cart_item_id);
-      fetchAllCartItems();
+      // Trigger cart refresh after successful deletion
+      setCartNeedsRefresh(true);
       toast.info(`${product.product_name} completely removed from cart.`);
     } catch (error) {
       toast.error(`Failed to delete ${product.product_name} from cart.`);
@@ -71,11 +141,11 @@ function App() {
   const update = async (product, quantity) => {
     try {
       const payload = { product: product.product, quantity: quantity };
-
       await updateItemToCart(product.cart_item_id, payload);
-      fetchAllCartItems();
+      // Trigger cart refresh after successful update
+      setCartNeedsRefresh(true);
       toast.info(
-        `${product.product_name} completely updated quantity from cart.`
+        `${product.product_name} quantity updated in cart.`
       );
     } catch (error) {
       toast.error(
@@ -85,33 +155,33 @@ function App() {
     }
   };
 
-  const addToCart = (product, num = 1) => {
-    console.log("Quantity: ", num);
+  const addToCart = async (product, num = 1) => {
     const productExit = CartItem.find(
-      (item) => item.product_id === product.product_id
+      (item) => item.product === product.product_id
     );
 
-    console.log("selected: ", selectedProduct);
-    console.log("Item: ", productExit);
-    console.log("Product: ", product);
-
     if (productExit) {
-      // update
+      // If product exists in cart, update its quantity
       update(productExit, productExit.quantity + num);
     } else {
-      // create
+      // If product does not exist, add it to cart
       try {
         const payload = {
-          cart: localStorage.getItem("cart"),
+          cart: parseInt(localStorage.getItem("cart"), 10), // Ensure cart ID is an integer
           product: product.product_id,
           quantity: num,
         };
-        addItemToCart(payload);
-        fetchAllCartItems();
-        toast.info(`${product.product_name} added to the cart.`);
+        console.log("Adding new item to cart with payload:", payload);
+        await addItemToCart(payload);
+        // Trigger cart refresh after successful addition
+        setCartNeedsRefresh(true);
+        // Only show toast if cart data isn't actively loading to avoid double notifications
+        if (!cartLoading) toast.info(`${product.product_name} added to the cart.`);
       } catch (error) {
+        // This catch block should only handle errors during *creation* of a new item
+        // not logic for updating. The previous code had the update logic here, which was incorrect.
         toast.error(`Failed to add ${product.product_name} to cart.`);
-        console.error("Error adding cart item:", error);
+        console.error("Error adding new cart item:", error);
       }
     }
   };
@@ -124,7 +194,6 @@ function App() {
     if (productExit.quantity === 1) {
       // delete
       deletion(productExit);
-      console.log("Delete ID: ", productExit.cart_item_id);
     } else {
       // update
       update(productExit, productExit.quantity - 1);
@@ -138,13 +207,7 @@ function App() {
     if (!productToDelete) return;
     deletion(productToDelete);
   };
-  useEffect(() => {
-    console.log(cartData);
-    if (!cartLoading && cartData) {
-      console.log("cartData received:", cartData); // <--- is this an array?
-      setCartItem(cartData);
-    }
-  }, [cartData]);
+
   return (
     <DataContainer.Provider
       value={{
@@ -197,11 +260,11 @@ function App() {
                 </ProtectedRoute>
               }
             />
-              <Route
-                path="/checkout"
-                element={
-                  <ProtectedRoute>
-                    <Checkout />
+            <Route
+              path="/checkout"
+              element={
+                <ProtectedRoute>
+                  <Checkout />
                 </ProtectedRoute>
               }
             />

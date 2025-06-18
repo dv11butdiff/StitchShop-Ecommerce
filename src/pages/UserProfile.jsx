@@ -7,70 +7,19 @@ import axios from "axios";
 import { DataContainer } from "../App";
 
 const UserProfile = () => {
-  const { UserInfo, setUserInfo } = useContext(DataContainer);
+  const { UserInfo } = useContext(DataContainer);
   const [user, setUser] = useState({});
-
-  const { data, loading, error, getData } = useData("auth/me/");
   const navigate = useNavigate();
-
-  useEffect(() => {
-    getData();
-  }, []);
-
-  useEffect(() => {
-    if (data) {
-      const primaryAddress =
-        data.address && data.address.length > 0 ? data.address[0] : null;
-
-      setUser({
-        id: data.id,
-        username: data.username,
-        email: data.email,
-        firstName: data.first_name,
-        middleName: data.middle_name,
-        lastName: data.last_name,
-        phoneNumber: data.phone,
-        role: data.role,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at,
-        profilePicture: "https://placehold.co/150x150/0f3460/FFFFFF?text=JD",
-        bio: "Passionate shopper and tech enthusiast. Always looking for the best deals!",
-        cart: data.cart.cart_id,
-        address: primaryAddress
-          ? {
-              addressId: primaryAddress.address_id,
-              streetName: primaryAddress.street_name,
-              buildingHouseNo: primaryAddress.building_house_no,
-              barangay: primaryAddress.barangay,
-              cityMunicipality: primaryAddress.city_municipality,
-              province: primaryAddress.province,
-              postalCode: primaryAddress.postal_code,
-              country: primaryAddress.country,
-              addressType: primaryAddress.address_type,
-            }
-          : null,
-      });
-
-      localStorage.setItem("cart", user.cart);
-    }
-  }, [data]);
-
-  useEffect(() => {
-    if (error) {
-      toast.error(
-        error?.data?.detail || "Failed to load user profile. Please try again."
-      );
-    }
-  }, [error]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editableUser, setEditableUser] = useState({});
 
   useEffect(() => {
-    if (user.id) {
-      setEditableUser(user);
+    if (UserInfo.id) {
+      setEditableUser(UserInfo);
+      setUser(UserInfo)
     }
-  }, [user]);
+  }, [UserInfo]);
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
@@ -161,16 +110,16 @@ const UserProfile = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen text-lg text-gray-700">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900 mr-3"></div>
-        Loading user profile...
-      </div>
-    );
-  }
+  // if (UserInfo.id) {
+  //   return (
+  //     <div className="flex justify-center items-center h-screen text-lg text-gray-700">
+  //       <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900 mr-3"></div>
+  //       Loading user profile...
+  //     </div>
+  //   );
+  // }
 
-  if (error || !user.id) {
+  if (!UserInfo.id) {
     return (
       <div className="flex justify-center items-center h-screen text-lg text-red-600">
         <p>Failed to load user profile. Please try logging in again.</p>
