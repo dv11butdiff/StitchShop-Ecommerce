@@ -22,15 +22,16 @@ const Checkout = () => {
     province: UserInfo.address?.province || "",
     postalCode: UserInfo.address?.postalCode || "",
     country: UserInfo.address?.country || "",
+    paymentMethod: '', // ✅ add this line
   });
 
   // Effect to check for address presence
   useEffect(() => {
     // Check if UserInfo is loaded and if the address is missing
-    if (UserInfo && (!UserInfo.address || Object.keys(UserInfo.address).length === 0)) {
+     if (UserInfo && (!UserInfo.address || Object.keys(UserInfo.address).length === 0)) {
       toast.error("Please update your address information in your profile to proceed with checkout.");
       navigate("/profile");
-    }
+    } 
   }, [UserInfo, navigate]); // Depend on UserInfo and navigate
 
   const handleChange = (e) => {
@@ -79,18 +80,21 @@ const Checkout = () => {
           }))
         : [],
       total_price: totalPrice,
+      payment_method: form.paymentMethod,
     };
-
-    try {
+    
+      try {
       // Replace alert with toast notification
       await axios.post("http://localhost:8000/api/orders/", order);
       toast.success("Order placed successfully!");
       setCartItem([]); // Clear cart after successful order
-      navigate("/"); // Navigate to home or order confirmation page
+      navigate("/orders"); // Navigate to home or order confirmation page
     } catch (error) {
       console.error("Order submission failed", error);
       // Replace alert with toast notification
       toast.error("Failed to place order. Please try again.");
+      
+       navigate("/orders"); //temporary navigation to orders page
     }
   };
 
@@ -208,7 +212,22 @@ const Checkout = () => {
         </Form>
       </div>
 
-      <div className="cart-summary">
+    <div className="cart-summary">
+        {/* Payment Method Selection */}
+        <Form.Group className="mb-3">
+          <Form.Label>Payment Method</Form.Label>
+          <Form.Select
+            name="paymentMethod"
+            value={form.paymentMethod}
+            onChange={handleChange}
+            required
+          >
+            <option value="">-- Select Payment Method --</option>
+            <option value="cod">Cash on Delivery</option>
+            <option value="gcash">GCash</option>
+          </Form.Select>
+        </Form.Group>
+
         <h2>Order Summary</h2>
         {Array.isArray(CartItem) && CartItem.length > 0 ? (
           CartItem.map((item) => (

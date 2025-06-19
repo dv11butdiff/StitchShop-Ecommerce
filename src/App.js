@@ -20,6 +20,8 @@ const Register = lazy(() => import("./pages/Register"));
 const UserProfile = lazy(() => import("./pages/UserProfile"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 
+const OrderItem = lazy(() => import("./pages/OrderItem"));
+
 export const DataContainer = createContext();
 
 function App() {
@@ -265,6 +267,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Checkout />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/orders"
+              element={
+                <ProtectedRoute>
+                  <OrderItem />
                 </ProtectedRoute>
               }
             />

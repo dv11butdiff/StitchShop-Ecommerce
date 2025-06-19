@@ -1,0 +1,57 @@
+/* orders.css */
+
+.order-card {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease-in-out;
+}
+
+.order-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
+.order-card h5 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.order-card p {
+  margin: 5px 0;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.order-card h6 {
+  font-size: 1rem;
+  margin-top: 15px;
+  font-weight: 500;
+  color: #333;
+}
+
+.order-card ul {
+  list-style-type: disc;
+  margin-left: 20px;
+  color: #444;
+}
+
+@media (max-width: 768px) {
+  .order-card {
+    padding: 16px;
+  }
+
+  .order-card h5 {
+    font-size: 1.1rem;
+  }
+
+  .order-card p,
+  .order-card h6 {
+    font-size: 0.9rem;
+  }
+}
