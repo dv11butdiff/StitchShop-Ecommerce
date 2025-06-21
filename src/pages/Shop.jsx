@@ -22,6 +22,7 @@ const Shop = () => {
     if (allProducts) {
       setDisplayedProducts(allProducts);
     } else {
+      toast.dismiss();
       toast.error("Failed to load products. Please try again.");
     }
   }, [allProducts]);

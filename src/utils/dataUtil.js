@@ -137,6 +137,7 @@ const useData = (endpointPath) => {
     if (err?.response) {
       setError(err?.response);
       console.error("API Error:", err?.response?.data || err.message);
+      console.log("API Error(2.0): ", err);
     } else {
       setError({
         status: null,

@@ -16,6 +16,7 @@ const ProductDetails = () => {
 
   useEffect(() => {
     const storedProduct = localStorage.getItem(`selectedProduct-${id}`);
+    
     if (!selectedProduct && storedProduct) {
       try {
         setSelectedProduct(JSON.parse(storedProduct));
@@ -36,7 +37,7 @@ const ProductDetails = () => {
   const handleQuantityChange = (event) => {
     const value = event.target.value;
     // Get max from selectedProduct, default to 1 if null/undefined/0 to prevent issues
-    const maxAllowedQuantity = selectedProduct?.quantity > 0 ? selectedProduct.quantity : 1;
+    const maxAllowedQuantity = selectedProduct?.stock_quantity > 0 ? selectedProduct.stock_quantity : 1;
 
     if (value === '' || isNaN(value)) {
       setQuantity('');
@@ -46,6 +47,7 @@ const ProductDetails = () => {
         newQuantity = 1;
       } else if (newQuantity > maxAllowedQuantity) {
         newQuantity = maxAllowedQuantity;
+        toast.dismiss();
         toast.warn(`Maximum quantity for this product is ${maxAllowedQuantity}`);
       }
       setQuantity(newQuantity);
@@ -55,18 +57,14 @@ const ProductDetails = () => {
 
   const handelAdd = (product, qty) => {
     // Only proceed if product and a valid quantity exist
-    if (!product || product.quantity === null || product.quantity === 0 || typeof product.quantity === 'undefined') {
+    console.log("Product: ", product.stock_quantity)
+    if (!product || product.stock_quantity === null || product.stock_quantity === 0 || typeof product.stock_quantity === 'undefined') {
+      toast.dismiss();
       toast.error("This product is currently out of stock.");
       return; // Stop the function if product is not available
     }
 
-    const maxAllowedQuantity = product?.quantity || 1;
-    const finalQty = Math.min(maxAllowedQuantity, Math.max(1, parseInt(qty, 10) || 1));
-
-    addToCart(product, finalQty);
-    if (UserInfo.cart) {
-      toast.success("Product has been added to cart!");
-    }
+    addToCart(product, qty);  
   };
 
   useEffect(() => {
@@ -139,7 +137,7 @@ const ProductDetails = () => {
                 value={quantity}
                 onChange={handleQuantityChange}
                 min="1"
-                max={selectedProduct?.quantity || 1000}
+                max={selectedProduct?.stock_quantity || 1000}
                 disabled={isAddToCartDisabled}
               />
               <button

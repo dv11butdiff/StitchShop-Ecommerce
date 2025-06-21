@@ -13,18 +13,35 @@ const Register = () => {
   const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
+  const [step, setStep] = useState(1); // New state to manage the current step
   const navigate = useNavigate();
 
   const { createData, error, loading } = useData("auth/register/");
 
+  const handleNextStep = () => {
+    // Client-side validation for Step 1 before moving to Step 2
+    if (step === 1) {
+      if (!username || !email || !password || !confirmPassword) {
+        toast.error("Please fill in all required fields for account details.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        toast.error("Passwords do not match!");
+        return;
+      }
+      // You can add more complex validation for email/username here if needed
+    }
+    setStep(step + 1);
+  };
+
+  const handlePreviousStep = () => {
+    setStep(step - 1);
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match!");
-      return;
-    }
-
+    // The backend submission logic remains the same, as all data is gathered before final submit
     try {
       const responseData = await createData({
         username,
@@ -74,140 +91,181 @@ const Register = () => {
               className="register-form p-4 shadow-lg rounded"
               style={{ backgroundColor: "white" }}
             >
-              <h2 className="text-center mb-4">User Registration</h2>
-              <Form onSubmit={handleRegister}>
-                <Row>
-                  <Col md={6}>
-                    <Form.Group
-                      className="mb-3"
-                      controlId="formRegisterUsername"
-                    >
-                      <Form.Label>Username</Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="Enter username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3" controlId="formRegisterEmail">
-                      <Form.Label>Email address</Form.Label>
-                      <Form.Control
-                        type="email"
-                        placeholder="Enter email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+              <h2 className="text-center mb-4" style={{color: '#483C51'}}>USER REGISTRATION</h2>
+              <hr />
+              <Form onSubmit={step === 2 ? handleRegister : handleNextStep}>
+                {/* Step 1: Account Details */}
+                {step === 1 && (
+                  <>
+                    <h4 className="mb-3">Account Details</h4>
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group
+                          className="mb-3"
+                          controlId="formRegisterUsername"
+                        >
+                          <Form.Label>Username</Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group
+                          className="mb-3"
+                          controlId="formRegisterEmail"
+                        >
+                          <Form.Label>Email address</Form.Label>
+                          <Form.Control
+                            type="email"
+                            placeholder="Enter email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
 
-                <Row>
-                  <Col md={6}>
-                    <Form.Group
-                      className="mb-3"
-                      controlId="formRegisterPassword"
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group
+                          className="mb-3"
+                          controlId="formRegisterPassword"
+                        >
+                          <Form.Label>Password</Form.Label>
+                          <Form.Control
+                            type="password"
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group
+                          className="mb-3"
+                          controlId="formRegisterConfirmPassword"
+                        >
+                          <Form.Label>Confirm Password</Form.Label>
+                          <Form.Control
+                            type="password"
+                            placeholder="Confirm password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <Button
+                      variant="primary"
+                      className="w-100 mt-3 rounded-pill"
+                      style={{
+                        background: '#483C51',
+                        border: "none",
+                        padding: "10px 0",
+                        fontWeight: "bold",
+                      }}
+                      onClick={handleNextStep}
                     >
-                      <Form.Label>Password</Form.Label>
-                      <Form.Control
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group
-                      className="mb-3"
-                      controlId="formRegisterConfirmPassword"
-                    >
-                      <Form.Label>Confirm Password</Form.Label>
-                      <Form.Control
-                        type="password"
-                        placeholder="Confirm password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                      Next
+                    </Button>
+                  </>
+                )}
 
-                <Row>
-                  <Col md={6}>
-                    <Form.Group
-                      className="mb-3"
-                      controlId="formRegisterFirstName"
-                    >
-                      <Form.Label>First Name</Form.Label>
+                {/* Step 2: Personal Information */}
+                {step === 2 && (
+                  <>
+                    <h4 className="mb-3" style={{color: '#483C51'}}>Personal Information</h4>
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group
+                          className="mb-3"
+                          controlId="formRegisterFirstName"
+                        >
+                          <Form.Label>First Name</Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter first name"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group
+                          className="mb-3"
+                          controlId="formRegisterMiddleName"
+                        >
+                          <Form.Label>Middle Name</Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter middle name (optional)"
+                            value={middleName}
+                            onChange={(e) => setMiddleName(e.target.value)}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group
+                          className="mb-3"
+                          controlId="formRegisterLastName"
+                        >
+                          <Form.Label>Last Name</Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter last name"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <Form.Group className="mb-3" controlId="formRegisterPhone">
+                      <Form.Label>Phone Number</Form.Label>
                       <Form.Control
                         type="text"
-                        placeholder="Enter first name"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="Enter phone number"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
                       />
                     </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group
-                      className="mb-3"
-                      controlId="formRegisterMiddleName"
-                    >
-                      <Form.Label>Middle Name</Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="Enter middle name (optional)"
-                        value={middleName}
-                        onChange={(e) => setMiddleName(e.target.value)}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group
-                      className="mb-3"
-                      controlId="formRegisterLastName"
-                    >
-                      <Form.Label>Last Name</Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="Enter last name"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <Form.Group className="mb-3" controlId="formRegisterPhone">
-                  <Form.Label>Phone Number</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter phone number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                  />
-                </Form.Group>
 
-                <Button
-                  variant="primary"
-                  type="submit"
-                  className="w-100 mt-3 rounded-pill"
-                  style={{
-                    background:
-                      "linear-gradient(to right, #6a11cb 0%, #2575fc 100%)",
-                    border: "none",
-                    padding: "10px 0",
-                    fontWeight: "bold",
-                  }}
-                  disabled={loading}
-                >
-                  {loading ? "Registering..." : "Register"}
-                </Button>
+                    <Row className="mt-3">
+                      <Col>
+                        <Button
+                          variant="secondary"
+                          className="w-100 rounded-pill"
+                          onClick={handlePreviousStep}
+                        >
+                          Previous
+                        </Button>
+                      </Col>
+                      <Col>
+                        <Button
+                          variant="primary"
+                          type="submit" // This button will now submit the form
+                          className="w-100 rounded-pill"
+                          style={{
+                            background: '#483C51',
+                            border: "none",
+                            padding: "10px 0",
+                            fontWeight: "bold",
+                          }}
+                          disabled={loading}
+                        >
+                          {loading ? "Registering..." : "Register"}
+                        </Button>
+                      </Col>
+                    </Row>
+                  </>
+                )}
               </Form>
               <p className="text-center mt-3">
                 Already have an account? <a href="/login">Login here</a>

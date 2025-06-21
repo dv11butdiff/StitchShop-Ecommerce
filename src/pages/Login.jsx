@@ -22,9 +22,13 @@ const Login = () => {
         localStorage.setItem('refreshToken', data.refresh);
         localStorage.setItem("cart", parseInt(data.cart));
 
+        toast.dismiss();
         toast.success('Login successful!');
         navigate('/');
+
+        window.location.reload(true);
       } else {
+        toast.dismiss();
         toast.error(error?.data?.detail || 'Login failed. Please check your credentials.');
       }
     } catch (err) {
@@ -37,6 +41,7 @@ const Login = () => {
       const errorMessages = error.data ?
         Object.values(error.data).flat().join(' ') :
         error.message || 'Login failed. Please check your credentials.';
+      toast.dismiss();
       toast.error(errorMessages);
     }
   }, [error]);
@@ -47,7 +52,8 @@ const Login = () => {
         <Row className="justify-content-center">
           <Col md={6} lg={5}>
             <div className="login-form p-4 shadow-lg rounded" style={{ backgroundColor: 'white' }}>
-              <h2 className="text-center mb-4">User Login</h2>
+              <h2 className="text-center mb-4" style={{color: '#483C51'}}>USER LOGIN</h2>
+              <hr />
               <Form onSubmit={handleLogin}>
                 <Form.Group className="mb-3" controlId="formBasicUsername">
                   <Form.Label>Username</Form.Label>
@@ -76,7 +82,7 @@ const Login = () => {
                   type="submit"
                   className="w-100 mt-3 rounded-pill"
                   style={{
-                      background: 'linear-gradient(to right, #6a11cb 0%, #2575fc 100%)',
+                      background: '#483C51',
                       border: 'none',
                       padding: '10px 0',
                       fontWeight: 'bold',
@@ -87,7 +93,7 @@ const Login = () => {
                 </Button>
               </Form>
               <p className="text-center mt-3">
-                Don't have an account? <a href="/register">Register here</a>
+                Don't have an account? <a href="/register" style={{color: '#483C51'}}>Register here</a>
               </p>
             </div>
           </Col>

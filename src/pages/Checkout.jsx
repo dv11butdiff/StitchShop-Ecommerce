@@ -1,20 +1,32 @@
 import { useContext, useState, useEffect } from "react";
-import { DataContainer } from "../App";
+import { DataContainer } from "../App"; // Assuming DataContainer is in App.js
 import { useNavigate } from "react-router-dom";
-import { Form, Button } from "react-bootstrap"; // Removed Container, Row, Col as they are not used
-import axios from "axios";
+import { Form, Button } from "react-bootstrap";
+import axios from "axios"; // Ensure axios is imported
 import "../components/Checkout/checkout.css";
-import { toast } from "react-toastify"; // Import toast for notifications
+import { toast } from "react-toastify";
+import useData from "../utils/dataUtil";
 
 const Checkout = () => {
-  const { CartItem, setCartItem, UserInfo } = useContext(DataContainer);
+  // Destructure clearUserCart from DataContainer
+  const { CartItem, setCartItem, UserInfo, clearUserCart } = useContext(DataContainer); // Get clearUserCart
   const navigate = useNavigate();
+  const {
+    data: orderData,
+    error: orderError,
+    loading: orderLoading,
+    getData: fetchOrderData,
+    createData: addOrderData,
+  } = useData("orders/");
 
-  // Initialize form state using UserInfo.address
   const [form, setForm] = useState({
-    fullName: UserInfo.firstName + " " + (UserInfo.middleName || "") + " " + UserInfo.lastName,
+    fullName:
+      UserInfo.firstName +
+      " " +
+      (UserInfo.middleName || "") +
+      " " +
+      UserInfo.lastName,
     email: UserInfo.email,
-    // Populate address fields from UserInfo.address
     buildingHouseNo: UserInfo.address?.buildingHouseNo || "",
     streetName: UserInfo.address?.streetName || "",
     barangay: UserInfo.address?.barangay || "",
@@ -22,17 +34,23 @@ const Checkout = () => {
     province: UserInfo.address?.province || "",
     postalCode: UserInfo.address?.postalCode || "",
     country: UserInfo.address?.country || "",
-    paymentMethod: '', // ✅ add this line
+    paymentMethod: "", // Ensure this is set by the form
   });
 
-  // Effect to check for address presence
+  console.log("Form: ", form);
+
   useEffect(() => {
-    // Check if UserInfo is loaded and if the address is missing
-     if (UserInfo && (!UserInfo.address || Object.keys(UserInfo.address).length === 0)) {
-      toast.error("Please update your address information in your profile to proceed with checkout.");
+    if (
+      UserInfo &&
+      (!UserInfo.address || Object.keys(UserInfo.address).length === 0)
+    ) {
+      toast.dismiss();
+      toast.error(
+        "Please update your address information in your profile to proceed with checkout."
+      );
       navigate("/profile");
-    } 
-  }, [UserInfo, navigate]); // Depend on UserInfo and navigate
+    }
+  }, [UserInfo, navigate]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -54,47 +72,36 @@ const Checkout = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Construct the address object from the form state
-    const shippingAddress = {
-      buildingHouseNo: form.buildingHouseNo,
-      streetName: form.streetName,
-      barangay: form.barangay,
-      cityMunicipality: form.cityMunicipality,
-      province: form.province,
-      postalCode: form.postalCode,
-      country: form.country,
-      // You might want to add addressType here, e.g., "shipping"
-    };
-
     const order = {
-      customer_info: { // Changed from 'customer' to 'customer_info' for clarity or based on API
-        fullName: form.fullName,
-        email: form.email,
-        // Include the structured address here
-        address: shippingAddress,
-      },
+      billing_address: UserInfo.address.addressId,
+      shipping_address: UserInfo.address.addressId,
       items: Array.isArray(CartItem)
         ? CartItem.map((item) => ({
             product_id: item.product_id,
             quantity: item.quantity,
           }))
         : [],
-      total_price: totalPrice,
-      payment_method: form.paymentMethod,
+      total_amount: totalPrice,
+      payment_method: form.paymentMethod, // Ensure this is correctly picked from form
+      user: UserInfo.id,
     };
-    
-      try {
-      // Replace alert with toast notification
-      await axios.post("http://localhost:8000/api/orders/", order);
+
+    try {
+      await addOrderData(order);
+      toast.dismiss();
       toast.success("Order placed successfully!");
-      setCartItem([]); // Clear cart after successful order
-      navigate("/orders"); // Navigate to home or order confirmation page
-    } catch (error) {
-      console.error("Order submission failed", error);
-      // Replace alert with toast notification
-      toast.error("Failed to place order. Please try again.");
       
-       navigate("/orders"); //temporary navigation to orders page
+      // IMPORTANT: Clear the old cart and create a new empty one
+      await clearUserCart(); // Call the combined function from DataContainer
+
+      // Then navigate to the orders page or home
+      navigate("/orders");
+    } catch (error) {
+      console.error("Order submission failed", error.response?.data || error.message);
+      toast.dismiss();
+      toast.error("Failed to place order. Please try again.");
+      // You might want to handle specific error cases or not navigate on error
+      navigate("/orders"); // Temporary navigation for error case
     }
   };
 
@@ -110,11 +117,10 @@ const Checkout = () => {
               name="fullName"
               value={form.fullName}
               onChange={handleChange}
-              readOnly // Make full name read-only as it comes from UserInfo
+              readOnly
               required
             />
           </Form.Group>
-
           <Form.Group className="mb-3">
             <Form.Label>Email</Form.Label>
             <Form.Control
@@ -122,13 +128,13 @@ const Checkout = () => {
               name="email"
               value={form.email}
               onChange={handleChange}
-              readOnly // Make email read-only as it comes from UserInfo
+              readOnly
               required
             />
           </Form.Group>
 
-          <h2>Billing Address</h2>
-
+          {/* Address Fields */}
+          <h3>Shipping Address</h3>
           <Form.Group className="mb-3">
             <Form.Label>Building/House No.</Form.Label>
             <Form.Control
@@ -139,7 +145,6 @@ const Checkout = () => {
               required
             />
           </Form.Group>
-
           <Form.Group className="mb-3">
             <Form.Label>Street Name</Form.Label>
             <Form.Control
@@ -150,7 +155,6 @@ const Checkout = () => {
               required
             />
           </Form.Group>
-
           <Form.Group className="mb-3">
             <Form.Label>Barangay</Form.Label>
             <Form.Control
@@ -161,7 +165,6 @@ const Checkout = () => {
               required
             />
           </Form.Group>
-
           <Form.Group className="mb-3">
             <Form.Label>City/Municipality</Form.Label>
             <Form.Control
@@ -172,7 +175,6 @@ const Checkout = () => {
               required
             />
           </Form.Group>
-
           <Form.Group className="mb-3">
             <Form.Label>Province</Form.Label>
             <Form.Control
@@ -183,7 +185,6 @@ const Checkout = () => {
               required
             />
           </Form.Group>
-
           <Form.Group className="mb-3">
             <Form.Label>Postal Code</Form.Label>
             <Form.Control
@@ -194,7 +195,6 @@ const Checkout = () => {
               required
             />
           </Form.Group>
-
           <Form.Group className="mb-3">
             <Form.Label>Country</Form.Label>
             <Form.Control
@@ -212,7 +212,7 @@ const Checkout = () => {
         </Form>
       </div>
 
-    <div className="cart-summary">
+      <div className="cart-summary">
         {/* Payment Method Selection */}
         <Form.Group className="mb-3">
           <Form.Label>Payment Method</Form.Label>
@@ -223,8 +223,8 @@ const Checkout = () => {
             required
           >
             <option value="">-- Select Payment Method --</option>
-            <option value="cod">Cash on Delivery</option>
-            <option value="gcash">GCash</option>
+            <option value="Cash On Delivery">Cash on Delivery</option>
+            <option value="GCash">GCash</option>
           </Form.Select>
         </Form.Group>
 
@@ -244,7 +244,9 @@ const Checkout = () => {
         ) : (
           <p>Your cart is empty.</p>
         )}
-        <h3>Total: {formatToPHP(totalPrice)}</h3>
+        <div className="total-price mt-3">
+          <h5>Total: {formatToPHP(totalPrice)}</h5>
+        </div>
       </div>
     </div>
   );

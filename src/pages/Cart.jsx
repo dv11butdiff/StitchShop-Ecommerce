@@ -25,6 +25,53 @@ const Cart = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  useEffect(() => {
+    if (CartItem) {
+      // Revised processString function
+      const processString = (inputString) => {
+        let result = inputString.toLowerCase();
+
+        // 1. Remove content inside parentheses and the parentheses themselves
+        // This regex matches an opening parenthesis, followed by any characters
+        // that are not a closing parenthesis (non-greedy *?), and then a closing parenthesis.
+        // It also handles optional whitespace around the parentheses.
+        result = result.replace(/\s*\([^)]*\)\s*/g, ''); // Removes content within ()
+        
+        // 2. Remove apostrophes (if still desired, as they were in your last regex)
+        result = result.replace(/[’']/g, ''); // Only apostrophes, as () are handled above
+
+        // 3. Replace spaces with underscores
+        result = result.replace(/ /g, "_");
+
+        return result;
+      };
+
+      const processedProducts = CartItem.map(product => {
+        // Process the product name to create a clean string for the image file name
+        const processedNameForUrl = processString(product.product_name);
+        
+        // Construct the full image path using the processed name
+        // Assuming your images are in 'public/images/' and named after the product.
+        // If the original product.image_url already contains a path like 'spool_of_thread.png'
+        // and you want to process that existing URL, let me know.
+        // Based on your previous code snippet, you're using `processedName` here.
+        const fullImagePath = `/products/${processedNameForUrl}.jpg`; 
+        // ^^^ IMPORTANT: Changed from `/products/` to `/images/` based on your file structure image.
+
+        return {
+          ...product,
+          image_url: fullImagePath // Set the processed path to image_url
+        };
+      });
+
+      setCartItem(processedProducts);
+    }
+
+    console.log(CartItem); // This will log the *previous* state due to closure
+                               // To see the updated state, log outside useEffect or
+                               // in another useEffect dependent on allProducts.
+  }, []);
+
   return (
     <section className="cart-items">
       <Container>
@@ -40,7 +87,7 @@ const Cart = () => {
                   <div className="cart-list" key={item.cart_item_id}>
                     <Row>
                       <Col className="image-holder" sm={4} md={3}>
-                        <img src={item.imgUrl} alt="" />
+                        <img src={item.image_url} alt="" />
                       </Col>
                       <Col sm={8} md={9}>
                         <Row className="cart-content justify-content-center">

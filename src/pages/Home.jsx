@@ -7,6 +7,8 @@ import SliderHome from "../components/Slider"
 const Home = () => {
   const { addToCart, allProducts } = useContext(DataContainer);
 
+
+
   const newArrivalData = [...allProducts]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .slice(0, 8);

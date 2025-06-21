@@ -19,17 +19,13 @@ const Product = ({title,productItem,addToCart}) => {
         localStorage.setItem(`selectedProduct-${productItem.product_id}`,JSON.stringify(productItem));
         router(`/shop/${productItem.product_id}`);
     }
-    const handelAdd =(productItem)=> {
-        addToCart(productItem);
-        
-        if (UserInfo.cart) {
-            toast.success("Product has been added to cart!");
-        }
+    const handelAdd =(item)=> {
+        addToCart(item);
     }
     return (
     <Col md={3} sm={5} xs={10} className="product mtop">
         {title ==="Big Discount"? <span className="discount">{productItem.discount || 50}% Off</span>:null}
-        <img loading="lazy" onClick={()=>handelClick()} src={productItem.imgUrl || productImg01} alt=""/>
+        <img loading="lazy" onClick={()=>handelClick()} src={productItem.image_url || productImg01} alt=""/>
         <div className="product-like">
             <label>{count}</label> <br />
             <ion-icon name="heart-outline" onClick={increment}></ion-icon>
